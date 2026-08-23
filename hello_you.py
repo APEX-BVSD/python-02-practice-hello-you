@@ -1,6 +1,6 @@
 """
 Describe your program
-First Last - Date
+First Last - Month Year
 """
 
 def main() -> None:
