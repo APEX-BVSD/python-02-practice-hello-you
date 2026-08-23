@@ -87,15 +87,6 @@ jobs:
                 import subprocess
                 import sys
 
-                def escape_workflow_message(value):
-                    """Escapes characters"""
-                    return (
-                        str(value)
-                        .replace("%", "%25")
-                        .replace("\r", "%0D")
-                        .replace("\n", "%0A")
-                    )
-
                 def run_program(program_file, inputs):
                     user_input = "\n".join(str(value) for value in inputs) + "\n"
                     return subprocess.run(
