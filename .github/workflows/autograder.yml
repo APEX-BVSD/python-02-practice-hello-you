@@ -76,8 +76,8 @@ jobs:
               env:
                 TEST_NUMBER: "${{ matrix.number }}"
                 TEST_LABEL: "${{ matrix.label }}"
-                TEST_INPUTS: "${{ toJSON(matrix.inputs) }}""
-                EXPECTED_OUTPUT: "${{ matrix.expected }}""
+                TEST_INPUTS: "${{ toJSON(matrix.inputs) }}"
+                EXPECTED_OUTPUT: "${{ matrix.expected }}"
             
               # script to run program with name and capture output
               run: |
@@ -152,7 +152,7 @@ jobs:
                         )
                         return 1
 
-                    output = result.stdout.replace("\r\n", "\n").rstrip()
+                    output = result.stdout.replace("\r\n", "\n").removesuffix("\n")
                     output_matches = output.endswith(expected)
                     passed = result.returncode == 0 and output_matches
                     actual = expected if output_matches else output
