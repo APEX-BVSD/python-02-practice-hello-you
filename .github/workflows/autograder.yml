@@ -117,15 +117,6 @@ jobs:
                     print(f"  Actual: {actual}")
                     print(horiz_line)
 
-                    message = escape_workflow_message(
-                        f"{result_text}\n"
-                        f"Inputs: [{shown_inputs}]\n"
-                        f"Expected: {expected}\n"
-                        f"Actual:   {actual}"
-                        )
-
-                    print(f"::notice title=Test {number}: {label}::{message}")
-
                 def main():
                     # retrieve environment variables
                     number = os.environ["TEST_NUMBER"]
