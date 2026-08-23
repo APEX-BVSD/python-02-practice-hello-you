@@ -126,9 +126,7 @@ jobs:
                         f"Actual:   {actual}"
                         )
 
-                    print(
-                        f"::{annotation} title=Test {number}: {label}::{message}"
-                    )
+                    print(f"::notice title=Test {number}: {label}::{message}")
 
                 def main():
                     # retrieve environment variables
