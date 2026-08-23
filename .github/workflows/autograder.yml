@@ -17,6 +17,7 @@ jobs:
 
         strategy:
             fail-fast: false
+            max-parallel: 1
             matrix:
                 include:
                     - number: 1
@@ -69,7 +70,7 @@ jobs:
                       inputs: [名]
                       expected: Hello, 名!     
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Run test
               shell: bash
@@ -118,11 +119,13 @@ jobs:
                     print(f"Result:   {result_text}")
                     print(horiz_line)
 
-                    annotation = "notice" if passed else "error"
                     message = escape_workflow_message(
-                        f"{result_text} | Inputs: [{shown_inputs}] | "
-                        f"Expected: {expected} | Actual: {actual}"
-                    )
+                        f"{result_text}\n"
+                        f"Inputs: [{shown_inputs}]\n"
+                        f"Expected: {expected}\n"
+                        f"Actual:   {actual}"
+                        )
+
                     print(
                         f"::{annotation} title=Test {number}: {label}::{message}"
                     )
@@ -176,8 +179,8 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Count 
-              uses: actions/github-script@v7
+            - name: Summarize Test Runs 
+              uses: actions/github-script@v8
               with:
                 script: |
                     const jobs = await github.paginate(
