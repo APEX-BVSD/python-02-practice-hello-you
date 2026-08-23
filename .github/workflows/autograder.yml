@@ -1,0 +1,185 @@
+name: Apex Python Program I/O Autograder
+on: [push, pull_request, workflow_dispatch]
+
+env: 
+    PROGRAM_FILE: hello_you.py
+
+permissions:
+  contents: read
+  actions: read
+
+jobs: 
+    test:
+        name: "Test ${{ matrix.number }}: ${{ matrix.label }}"
+        runs-on: ubuntu-latest
+        timeout-minutes: 1
+    
+
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - number: 1
+                      label: Common name
+                      inputs: [Alice]
+                      expected: Hello, Alice!
+
+                    - number: 2
+                      label: Short common name
+                      inputs: [Bob]
+                      expected: Hello, Bob!
+
+                    - number: 3
+                      label: First and last name
+                      inputs: [Bob Jones]
+                      expected: Hello, Bob Jones!
+      
+                    - number: 4
+                      label:  Multiple names
+                      inputs: ["Bob, Hector, and Lalo"]
+                      expected: Hello, Bob, Hector, and Lalo!
+
+                    - number: 5
+                      label:  Punctuaction in name
+                      inputs: ["Mr. O'Connor"]
+                      expected: Hello, Mr. O'Connor!
+
+                    - number: 6
+                      label:  Accent
+                      inputs: [María]
+                      expected: Hello, María!
+
+                    - number: 7
+                      label:  Icelandic name 
+                      inputs: [Ágærðr]
+                      expected: Hello, Ágærðr!
+
+                    - number: 8
+                      label:  Arabic name
+                      inputs: [علي]
+                      expected: Hello, علي!
+
+                    - number: 9
+                      label:  Hebrew name
+                      inputs: [ארי]
+                      expected: Hello, ארי!
+
+                    - number: 10
+                      label:  Chinese name
+                      inputs: [名]
+                      expected: Hello, 名!     
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Run test
+              shell: bash
+              env:
+                TEST_NUMBER: "${{ matrix.number }}"
+                TEST_LABEL: "${{ matrix.label }}"
+                TEST_INPUTS: "${{ toJSON(matrix.inputs) }}"
+                EXPECTED_OUTPUT: "${{ matrix.expected }}"
+            
+              # script to run program with name and capture output
+              run: |
+                python3 - <<'PY'
+                import json
+                import os
+                import subprocess
+                import sys
+
+                def run_program(program_file, inputs):
+                    user_input = "\n".join(str(value) for value in inputs) + "\n"
+                    return subprocess.run(
+                        [sys.executable, program_file],
+                        input=user_input,
+                        text=True,
+                        capture_output=True,
+                        timeout=5,
+                    )
+
+                def print_report(number, label, inputs, expected, actual, passed):
+                    shown_inputs = ", ".join(str(value) for value in inputs)
+                    result_text = "✅ PASS" if passed else "❌ FAIL"
+                    horiz_line: str = "-" * 50
+                    print(horiz_line)
+                    print(f"Test {number}: {label}")
+                    print(result_text)
+                    print(f"Inputs: [{shown_inputs}]")
+                    print(f"Expected: {expected}")
+                    print(f"  Actual: {actual}")
+                    print(horiz_line)
+
+                def main():
+                    # retrieve environment variables
+                    number = os.environ["TEST_NUMBER"]
+                    label = os.environ["TEST_LABEL"]
+                    inputs = json.loads(os.environ["TEST_INPUTS"])
+                    program_file = os.environ["PROGRAM_FILE"]
+                    expected = os.environ["EXPECTED_OUTPUT"]
+
+                    try:
+                        result = run_program(program_file, inputs)
+
+                    except FileNotFoundError:
+                        actual = f"{program_file} was not found"
+                        print_report(
+                            number, label, inputs, expected, actual, False
+                        )
+                        return 1
+
+                    except subprocess.TimeoutExpired:
+                        actual = "Program did not finish within 5 seconds"
+                        print_report(
+                            number, label, inputs, expected, actual, False
+                        )
+                        return 1
+
+                    output = result.stdout.replace("\r\n", "\n").removesuffix("\n")
+                    output_matches = output.endswith(expected)
+                    passed = result.returncode == 0 and output_matches
+                    actual = expected if output_matches else output
+
+                    print_report(
+                        number, label, inputs, expected, actual, passed
+                    )
+
+                    if not passed and result.stderr:
+                        print(f"Error output: {result.stderr!r}")
+
+                    return 0 if passed else 1
+
+                if __name__ == "__main__":
+                    sys.exit(main())
+                PY
+    summary:
+        name: Test Summary
+        needs: test
+        if: always()
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Summarize Test Runs 
+              uses: actions/github-script@v8
+              with:
+                script: |
+                    const jobs = await github.paginate(
+                        github.rest.actions.listJobsForWorkflowRun,
+                        {
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            run_id: context.runId,
+                            per_page: 100,
+                        }
+                    );
+
+                    const tests = jobs.filter(
+                        job => /^Test \d+:/.test(job.name)
+                    );
+                    const passed = tests.filter(
+                    job => job.conclusion === "success"
+                    ).length;
+                    const failed = tests.length - passed;
+                    const result =
+                        `${passed}/${tests.length} tests passed; ${failed} failed.`;
+
+                    core.notice(result, { title: "Autograding result" });
