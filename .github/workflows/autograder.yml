@@ -88,15 +88,6 @@ jobs:
                 import subprocess
                 import sys
 
-                def escape_workflow_message(value):
-                    """Escapes characters"""
-                    return (
-                        str(value)
-                        .replace("%", "%25")
-                        .replace("\r", "%0D")
-                        .replace("\n", "%0A")
-                    )
-
                 def run_program(program_file, inputs):
                     user_input = "\n".join(str(value) for value in inputs) + "\n"
                     return subprocess.run(
@@ -108,25 +99,16 @@ jobs:
                     )
 
                 def print_report(number, label, inputs, expected, actual, passed):
-                    shown_inputs = ", ".join(str(value) for value in inputs)
-                    result_text = "✅ PASS" if passed else "❌ FAIL"
+                    shown_inputs: str = ", ".join(str(value) for value in inputs)
+                    result_text: str = "✅ PASS" if passed else "❌ FAIL"
                     horiz_line: str = "-" * 50
                     print(horiz_line)
                     print(f"Test {number}: {label}")
+                    print(result_text)
                     print(f"Inputs: [{shown_inputs}]")
                     print(f"Expected: {expected}")
                     print(f"Actual:   {actual}")
-                    print(f"Result:   {result_text}")
                     print(horiz_line)
-
-                    message = escape_workflow_message(
-                        f"{result_text}\n"
-                        f"Inputs: [{shown_inputs}]\n"
-                        f"Expected: {expected}\n"
-                        f"Actual:   {actual}"
-                        )
-
-                    print(f"::notice title=Test {number}: {label}::{message}")
 
                 def main():
                     # retrieve environment variables
