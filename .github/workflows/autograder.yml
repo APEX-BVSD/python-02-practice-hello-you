@@ -115,7 +115,7 @@ jobs:
                     print(f"Test {number}: {label}")
                     print(f"Inputs: [{shown_inputs}]")
                     print(f"Expected: {expected}")
-                    print(f"Actual:   {actual}")
+                    print(f"  Actual: {actual}")
                     print(horiz_line)
 
                     message = escape_workflow_message(
